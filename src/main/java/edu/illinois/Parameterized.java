@@ -6,8 +6,11 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.text.MessageFormat;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.Description;
@@ -191,7 +194,8 @@ import org.junit.runners.parameterized.TestWithParameters;
  * </pre>
  * @since 4.0
  */
-public class ParameterizedWithCartesian extends Suite {
+public class Parameterized extends Suite {
+    private static final Logger logger =  LoggerFactory.getLogger(Parameterized.class);
     /**
      * Annotation for a method which provides parameters to be injected into the
      * test class constructor by <code>Parameterized</code>. The method has to
@@ -288,11 +292,12 @@ public class ParameterizedWithCartesian extends Suite {
     /**
      * Only called reflectively. Do not use programmatically.
      */
-    public ParameterizedWithCartesian(Class<?> klass) throws Throwable {
+    public Parameterized(Class<?> klass) throws Throwable {
         this(klass, new RunnersFactory(klass));
     }
 
-    private ParameterizedWithCartesian(Class<?> klass, RunnersFactory runnersFactory) throws Exception {
+    private Parameterized(Class<?> klass, RunnersFactory runnersFactory) throws Exception {
+
         super(klass, runnersFactory.createRunners());
         validateBeforeParamAndAfterParamMethods(runnersFactory.parameterCount);
     }
@@ -300,8 +305,8 @@ public class ParameterizedWithCartesian extends Suite {
     private void validateBeforeParamAndAfterParamMethods(Integer parameterCount)
             throws InvalidTestClassError {
         List<Throwable> errors = new ArrayList<Throwable>();
-        validatePublicStaticVoidMethods(ParameterizedWithCartesian.BeforeParam.class, parameterCount, errors);
-        validatePublicStaticVoidMethods(ParameterizedWithCartesian.AfterParam.class, parameterCount, errors);
+        validatePublicStaticVoidMethods(Parameterized.BeforeParam.class, parameterCount, errors);
+        validatePublicStaticVoidMethods(Parameterized.AfterParam.class, parameterCount, errors);
         if (!errors.isEmpty()) {
             throw new InvalidTestClassError(getTestClass().getJavaClass(), errors);
         }
@@ -405,8 +410,26 @@ public class ParameterizedWithCartesian extends Suite {
         private List<TestWithParameters> createTestsForCartesianParameters(
                 Iterable<Object> allParameters, String namePattern)
                 throws Exception {
+            List<Object[]> normalizedParameters = normalizeAllParameters(allParameters);
+            int[] uniqueValueCounts = countUniqueValues(normalizedParameters);
 
-            List<Object[]> cartesians = generateCartesians(normalizeAllParameters(allParameters));
+            // Print the counts
+            String unique_values="";
+            int cartesianAmount=0;
+            for (int count : uniqueValueCounts) {
+                if(cartesianAmount == 0){
+                    cartesianAmount =1;
+                }
+                else{
+                    unique_values+=" x ";
+                }
+                unique_values+=count;
+                cartesianAmount*=count;
+            }
+            logger.info("Number of unique values for each parameter:" + unique_values + " = " + cartesianAmount);
+
+
+            List<Object[]> cartesians = generateCartesians(normalizedParameters);
             int i = 0;
             List<TestWithParameters> children = new ArrayList<TestWithParameters>();
             for (Object[] parametersOfSingleTest : cartesians) {
@@ -414,11 +437,90 @@ public class ParameterizedWithCartesian extends Suite {
             }
             return children;
         }
+        private int[] countUniqueValues(List<Object[]> normalizedParameters) {
+            int numColumns = normalizedParameters.get(0).length;
+            int[] uniqueValueCounts = new int[numColumns];
+            // Count unique values for each parameter
+            for (int i = 0; i < numColumns; i++) {
+                Set<Object> uniqueValues = new HashSet<>();
+                for (Object[] parameters : normalizedParameters) {
+                    Object value = parameters[i];
+                    if (value != null && value.getClass().isArray()) {
+                        boolean isDuplicate = false;
+                        for (Object item : uniqueValues) {
+                            if (value.getClass().getComponentType().isPrimitive()) {
+                                // Convert primitive array to wrapper array
+                                Object wrappedValue = convertToWrapperArray(value);
+                                Object wrappeditem = convertToWrapperArray(item);
+
+                                if (Arrays.deepEquals((Object[]) wrappedValue, (Object[]) wrappeditem)) {
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+                            else {
+                                if (Arrays.deepEquals((Object[]) value, (Object[]) item)) {
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!isDuplicate) {
+                            uniqueValues.add(value);
+                        }
+                    } else {
+                        uniqueValues.add(value);
+                    }
+                }
+                uniqueValueCounts[i] = uniqueValues.size();
+            }
+
+            return uniqueValueCounts;
+        }
+        private Object convertToWrapperArray(Object array) {
+            int length = Array.getLength(array);
+            Object wrapperArray = null;
+            if (array != null && length > 0) {
+                Class<?> componentType = array.getClass().getComponentType();
+                logger.info("found the component type:" + componentType);
+                wrapperArray = Array.newInstance(getWrapperType(componentType), Array.getLength(array));
+                logger.info("wrapping the array");
+            }
+
+            logger.info("setting up the values");
+            for (int j = 0; j < length; j++) {
+                Array.set(wrapperArray, j, Array.get(array, j));
+            }
+            return wrapperArray;
+        }
+
+        // Helper method to get the corresponding wrapper type for a primitive type
+        private Class<?> getWrapperType(Class<?> primitiveType) {
+            if (primitiveType == int.class) {
+                return Integer.class;
+            } else if (primitiveType == long.class) {
+                return Long.class;
+            } else if (primitiveType == short.class) {
+                return Short.class;
+            } else if (primitiveType == byte.class) {
+                return Byte.class;
+            } else if (primitiveType == double.class) {
+                return Double.class;
+            } else if (primitiveType == float.class) {
+                return Float.class;
+            } else if (primitiveType == char.class) {
+                return Character.class;
+            } else if (primitiveType == boolean.class) {
+                return Boolean.class;
+            }
+            return null;
+        }
 
         static List<Object[]> generateCartesians(List<Object[]> arrays) {
             List<Object[]> result = new ArrayList<>();
             Set<List<Object>> resultSet = new HashSet<>();
-
+            logger.info("InitialCombinations: " + arrays.size());
+            logger.info("ParameterCount: " + arrays.get(0).length);
             if (!arrays.isEmpty()) {
                 int numColumns = arrays.get(0).length;
                 int[] indices = new int[numColumns];
@@ -433,7 +535,6 @@ public class ParameterizedWithCartesian extends Suite {
                     for (int i = 0; i < numColumns; i++) {
                         product[i] = arrays.get(indices[i])[i];
                     }
-
                     if (isNotDuplicate(resultSet, product)) {
                         // Only add to the result if it's not a duplicate
                         result.add(product);
@@ -445,7 +546,6 @@ public class ParameterizedWithCartesian extends Suite {
                         indices[incrementIndex] = 0;
                         incrementIndex--;
                     }
-
                     if (incrementIndex < 0) {
                         // All combinations generated
                         break;
@@ -454,6 +554,8 @@ public class ParameterizedWithCartesian extends Suite {
                     indices[incrementIndex]++;
                 }
             }
+            logger.info("CartesianCombinations:" + result.size());
+
             return result;
         }
 
@@ -538,11 +640,6 @@ public class ParameterizedWithCartesian extends Suite {
                 throws Exception {
             int i = 0;
             List<TestWithParameters> children = new ArrayList<TestWithParameters>();
-
-//            for (Object parametersOfSingleTest : allParameters) {
-//                children.add(createTestWithNotNormalizedParameters(namePattern,
-//                        i++, parametersOfSingleTest));
-//            }
             for (Object parametersOfSingleTest : allParameters) {
                 children.add(createTestWithNotNormalizedParameters(namePattern,
                         i++, parametersOfSingleTest));
