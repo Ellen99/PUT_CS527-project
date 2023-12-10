@@ -9,9 +9,12 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.text.MessageFormat;
 import java.util.*;
+//import java.util.logging.Logger;
+//import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//import jdk.jpackage.internal.Log;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -482,12 +485,9 @@ public class Parameterized extends Suite {
             Object wrapperArray = null;
             if (array != null && length > 0) {
                 Class<?> componentType = array.getClass().getComponentType();
-                logger.info("found the component type:" + componentType);
                 wrapperArray = Array.newInstance(getWrapperType(componentType), Array.getLength(array));
-                logger.info("wrapping the array");
             }
 
-            logger.info("setting up the values");
             for (int j = 0; j < length; j++) {
                 Array.set(wrapperArray, j, Array.get(array, j));
             }
@@ -640,6 +640,11 @@ public class Parameterized extends Suite {
                 throws Exception {
             int i = 0;
             List<TestWithParameters> children = new ArrayList<TestWithParameters>();
+
+//            for (Object parametersOfSingleTest : allParameters) {
+//                children.add(createTestWithNotNormalizedParameters(namePattern,
+//                        i++, parametersOfSingleTest));
+//            }
             for (Object parametersOfSingleTest : allParameters) {
                 children.add(createTestWithNotNormalizedParameters(namePattern,
                         i++, parametersOfSingleTest));
