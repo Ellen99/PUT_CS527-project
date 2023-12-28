@@ -480,7 +480,7 @@ public class Parameterized extends Suite {
 
             return uniqueValueCounts;
         }
-        private Object convertToWrapperArray(Object array) {
+        private static Object convertToWrapperArray(Object array) {
             int length = Array.getLength(array);
             Object wrapperArray = null;
             if (array != null && length > 0) {
@@ -495,7 +495,7 @@ public class Parameterized extends Suite {
         }
 
         // Helper method to get the corresponding wrapper type for a primitive type
-        private Class<?> getWrapperType(Class<?> primitiveType) {
+        private static Class<?> getWrapperType(Class<?> primitiveType) {
             if (primitiveType == int.class) {
                 return Integer.class;
             } else if (primitiveType == long.class) {
@@ -513,12 +513,15 @@ public class Parameterized extends Suite {
             } else if (primitiveType == boolean.class) {
                 return Boolean.class;
             }
-            return null;
+            return primitiveType;
+//            return null;
         }
 
         static List<Object[]> generateCartesians(List<Object[]> arrays) {
             List<Object[]> result = new ArrayList<>();
             Set<List<Object>> resultSet = new HashSet<>();
+            int initialCombinations = arrays.size();
+            List<Object[]> arraysCopy = new ArrayList<>(arrays);
             logger.info("InitialCombinations: " + arrays.size());
             logger.info("ParameterCount: " + arrays.get(0).length);
             if (!arrays.isEmpty()) {
@@ -556,13 +559,19 @@ public class Parameterized extends Suite {
             }
             logger.info("CartesianCombinations:" + result.size());
 
+            if(result.size() == initialCombinations)
+                return arraysCopy;
             return result;
         }
 
         private static boolean isNotDuplicate(Set<List<Object>> set, Object[] array) {
             for (List<Object> list : set) {
                 if (array.getClass().isArray() && list.get(0).getClass().isArray()) {
-                    if (Arrays.deepEquals((Object[]) list.get(0), (Object[]) array)) {
+
+                    Object wrappedValue = convertToWrapperArray(list.toArray());
+                    Object wrappedItem = convertToWrapperArray(array);
+
+                    if (Arrays.deepEquals((Object[]) wrappedValue, (Object[]) wrappedItem)) {
                         return false;
                     }
                 } else if (Arrays.deepEquals(list.toArray(), array)) {
@@ -640,16 +649,11 @@ public class Parameterized extends Suite {
                 throws Exception {
             int i = 0;
             List<TestWithParameters> children = new ArrayList<TestWithParameters>();
-
-//            for (Object parametersOfSingleTest : allParameters) {
-//                children.add(createTestWithNotNormalizedParameters(namePattern,
-//                        i++, parametersOfSingleTest));
-//            }
             for (Object parametersOfSingleTest : allParameters) {
                 children.add(createTestWithNotNormalizedParameters(namePattern,
                         i++, parametersOfSingleTest));
             }
-
+            
             return children;
         }
 
