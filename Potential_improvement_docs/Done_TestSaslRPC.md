@@ -4,12 +4,22 @@
 
 **Reason(s) for Failure(s):**
 
+Assertion failures, to further analyze the tests comment out the assertions, keep the function calls and see whether there are any failures
 
 **Potential fixes:**
 
 
+Commenting out the assertion to see if there is any other reasons which might cause tests to fail:
+
+```
+//    assertEquals(expect.toString(), actual);
+```
+the change resulted in 18 to 12 failures
 
 
+After taking out all the assertions I got no failures!!!! means the code is no exceptions when running with all the parameter combinations, 
+
+```Tests run: 24, Failures: 0, Errors: 0, Skipped: 0```
 
 
 
@@ -23,6 +33,9 @@ ________
 
 **Reason(s) for Failure(s):**
 
+12 errors as in ```testSimpleServerWithTokens```
+
+The remaining 6 errors were  ```java.io.IOException: javax.security.sasl.SaslException: DIGEST-MD5: No common protection layer between client and server```
 
 **Potential fixes:**
 
@@ -42,6 +55,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+same as ```testDigestRpc```
 
 **Potential fixes:**
 
@@ -61,6 +75,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+Same as ```testSimpleServerWithTokens```
 
 **Potential fixes:**
 
@@ -81,6 +96,8 @@ ________
 **Reason(s) for Failure(s):**
 
 
+Same as ```testSimpleServerWithTokens```
+
 **Potential fixes:**
 
 
@@ -99,6 +116,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+Same as ```testSimpleServerWithTokens```
 
 **Potential fixes:**
 
@@ -137,6 +155,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+``` javax.security.sasl.SaslException: DIGEST-MD5: No common protection layer between client and server```
 
 **Potential fixes:**
 
@@ -213,10 +232,11 @@ ________
 
 **Reason(s) for Failure(s):**
 
+```java.lang.UnsupportedOperationException: TOKEN login authentication is not supported```
 
 **Potential fixes:**
 
-
+Authentication required
 
 
 
