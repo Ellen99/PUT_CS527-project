@@ -4,6 +4,9 @@
 
 **Reason(s) for Failure(s):**
 
+Even fails without cartesian params, maybe needs some credentials to access test bucket
+
+same for others in this class
 
 **Potential fixes:**
 

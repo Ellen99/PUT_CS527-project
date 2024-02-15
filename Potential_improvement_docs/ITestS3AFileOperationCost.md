@@ -5,6 +5,9 @@
 **Reason(s) for Failure(s):**
 
 
+The tests are failing even without cartesian parameters, the problem seems to be connected with credentials, and permissions needed to access to test bucket.
+
+Same for all the tests in this class
 **Potential fixes:**
 
 

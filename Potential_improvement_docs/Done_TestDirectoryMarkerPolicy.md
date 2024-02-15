@@ -4,13 +4,22 @@
 
 **Reason(s) for Failure(s):**
 
+First there were 14 errors, commenting out the assertions resulted in 4 errors which are described below:
+
+Reason is dependency between two parameters: MarkerPolicy and predicate
+
 
 **Potential fixes:**
 
 
 
+When MarkerPolicy is Authorative, the predicate shouldn’t fail when invoked(shouldn’t be FAIL_IF_INVOKED)
 
 
+
+DirectoryPolicy.MarkerPolicy.Authoritative
+
+FAIL_IF_INVOKED,
 
 
 
@@ -23,6 +32,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+same as testNonAuthPath
 
 **Potential fixes:**
 
@@ -42,6 +52,7 @@ ________
 
 **Reason(s) for Failure(s):**
 
+same as testNonAuthPath
 
 **Potential fixes:**
 

@@ -4,6 +4,8 @@
 
 **Reason(s) for Failure(s):**
 
+The tests are skipped without cartesian parameters, the problem seems to be connected with credentials, and permissions needed.
+
 
 **Potential fixes:**
 
