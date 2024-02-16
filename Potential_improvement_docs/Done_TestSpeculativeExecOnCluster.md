@@ -4,6 +4,8 @@
 
 **Reason(s) for Failure(s):**
 
+All of the tests passed after commenting out the assertions
+
 
 **Potential fixes:**
 
